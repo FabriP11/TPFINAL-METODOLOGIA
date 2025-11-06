@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config.database import engine,Base
 
 #Creamos la app FastAPI
-
 app = FastAPI(
     title= "Clinica Medica",
     description= "Aplicacion para la gestion de turno de un centro medico",
@@ -13,7 +12,6 @@ app = FastAPI(
 
 
 #configuracion de CORS
-
 origins= [
     "http://localhost:3000", #Front local
     "http://localhost:3000"
@@ -28,7 +26,6 @@ app.add_middleware(
 )
 
 #crear las tablas si es que no existen'
-
 @app.on_event("startup")
 async def startup_event():
     async with engine.begin() as conn:
@@ -36,7 +33,6 @@ async def startup_event():
 
 
 #incluir los routers
-
 app.include_router(paciente.router)
 app.include_router(especialidad.router)
 app.include_router(medico.router)

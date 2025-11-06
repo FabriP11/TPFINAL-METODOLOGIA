@@ -1,4 +1,3 @@
-// src/pages/MedicosPage.js
 import { useEffect, useState } from "react";
 import {
   getMedicos,
@@ -7,7 +6,7 @@ import {
   eliminarMedico,
 } from "../api/medicos";
 import { getEspecialidades } from "../api/especialidades";
-import Layout from "../components/Layout"; // 👈 importante
+import Layout from "../components/Layout";
 
 function MedicosPage() {
   const [medicos, setMedicos] = useState([]);

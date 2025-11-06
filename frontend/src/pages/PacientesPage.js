@@ -1,4 +1,3 @@
-// src/pages/PacientesPage.js
 import React, { useEffect, useState } from "react";
 import {
   getPacientes,
@@ -6,7 +5,7 @@ import {
   actualizarPaciente,
   eliminarPaciente,
 } from "../api/pacientes";
-import Layout from "../components/Layout"; // 👈 NUEVO
+import Layout from "../components/Layout";
 
 const emptyForm = {
   id_paciente: null,
@@ -32,7 +31,7 @@ function PacientesPage() {
     try {
       setCargando(true);
       setError("");
-      const data = await getPacientes(); // ya devuelve res.data
+      const data = await getPacientes();
       setPacientes(data);
     } catch (err) {
       console.error(err);

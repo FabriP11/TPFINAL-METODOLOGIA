@@ -14,20 +14,15 @@ MYSQL_DB = os.getenv("MYSQL_DB")
 
 DATABASE_URL = f"mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
-# Crear motor asíncrono
 engine = create_async_engine(DATABASE_URL, echo=True)
 
-# Crear sesión asíncrona
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False
 )
-
-# Base para los modelos
 Base = declarative_base()
 
-# Dependencia para usar en los endpoints
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session

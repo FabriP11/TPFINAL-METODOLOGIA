@@ -1,16 +1,15 @@
-// src/pages/TurnosPage.js
 import { useEffect, useState } from "react";
 import { crearTurno, actualizarTurno } from "../api/turnos";
 import { getPacientes } from "../api/pacientes";
 import { getMedicos } from "../api/medicos";
-import { getEspecialidades } from "../api/especialidades"; // 👈 NUEVO
+import { getEspecialidades } from "../api/especialidades";
 import Layout from "../components/Layout";
 
 function TurnosPage() {
   const [pacientes, setPacientes] = useState([]);
   const [medicos, setMedicos] = useState([]);
-  const [especialidades, setEspecialidades] = useState([]); // 👈 NUEVO
-  const [especialidadSeleccionada, setEspecialidadSeleccionada] = useState(""); // 👈 NUEVO
+  const [especialidades, setEspecialidades] = useState([]);
+  const [especialidadSeleccionada, setEspecialidadSeleccionada] = useState("");
 
   const [form, setForm] = useState({
     id_turno: null,
@@ -22,11 +21,11 @@ function TurnosPage() {
   const [modoEdicion, setModoEdicion] = useState(false);
 
   async function cargarDatos() {
-    // ahora traemos pacientes, médicos y especialidades juntos
+    //ahora traemos pacientes, médicos y especialidades juntos
     const [ps, ms, esps] = await Promise.all([
       getPacientes(),
       getMedicos(),
-      getEspecialidades(), // 👈 NUEVO
+      getEspecialidades(),
     ]);
     setPacientes(ps);
     setMedicos(ms);
@@ -44,11 +43,10 @@ function TurnosPage() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    // 👉 payload correcto (id_paciente siempre número)
     const payload = {
       id_paciente: Number(form.id_paciente),
       id_medico: form.id_medico ? Number(form.id_medico) : null,
-      fecha_turno: form.fecha_turno, // string tipo "yyyy-mm-ddThh:mm"
+      fecha_turno: form.fecha_turno,
       estado: form.estado,
     };
 
@@ -69,7 +67,7 @@ function TurnosPage() {
     setEspecialidadSeleccionada("");
   }
 
-  // 🔎 Médicos filtrados por especialidad
+  //Médicos filtrados por especialidad
   const medicosFiltrados =
     especialidadSeleccionada === ""
       ? medicos
@@ -112,9 +110,9 @@ function TurnosPage() {
         </button>
       </div>
 
-      {/* Card de Datos del Turno */}
+      {}
       <div className="mb-6 overflow-hidden rounded-xl bg-white shadow-md">
-        {/* Header de la card */}
+        {}
         <div className="flex items-center gap-2 bg-blue-600 px-5 py-3 text-white">
           <span>✏️</span>
           <h2 className="font-semibold">Datos del Turno</h2>

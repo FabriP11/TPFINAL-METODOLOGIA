@@ -1,11 +1,9 @@
-// src/pages/HomePage.js
 import React, { useEffect, useState } from "react";
 import { getTurnos } from "../api/turnos";
 import { getPacientes } from "../api/pacientes";
 import { getMedicos } from "../api/medicos";
 import Layout from "../components/Layout"; // ⬅️ IMPORTANTE
 
-// Helpers de formato
 function formatearFecha(fechaStr) {
   if (!fechaStr) return "-";
   const d = new Date(fechaStr);
@@ -30,7 +28,6 @@ function HomePage() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
 
-  // filtros
   const [fechaFiltro, setFechaFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
   const [busquedaPaciente, setBusquedaPaciente] = useState("");
@@ -59,7 +56,7 @@ function HomePage() {
     }
   }
 
-  // Enriquecer turnos con nombres de paciente y médico
+
   const turnosEnriquecidos = turnos.map((t) => {
     const paciente = pacientes.find((p) => p.id_paciente === t.id_paciente);
     const medico = medicos.find((m) => m.id_medico === t.id_medico);
@@ -80,7 +77,7 @@ function HomePage() {
   const turnosFiltrados = turnosEnriquecidos.filter((t) => {
     let ok = true;
 
-    // filtro por fecha (comparamos solo yyyy-mm-dd)
+    // filtro por fecha 
     if (fechaFiltro) {
       const fechaTurno = new Date(t.fecha_turno);
       const fechaInput = new Date(fechaFiltro);
@@ -108,7 +105,7 @@ function HomePage() {
 
   return (
     <Layout>
-      {/* TODO el contenido anterior ahora va dentro del Layout */}
+      {}
       <div className="min-h-screen bg-slate-100 px-4 py-6 md:px-8">
         {/* Encabezado */}
         <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -194,9 +191,9 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Card de Turnos Registrados */}
+        {}
         <div className="overflow-hidden rounded-lg bg-white shadow">
-          {/* Header de la card */}
+          {}
           <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-500 text-sm text-white">
@@ -289,7 +286,7 @@ function HomePage() {
                               ? "bg-slate-200 text-slate-700"
                               : t.estado === "Cancelado"
                               ? "bg-red-100 text-red-700"
-                              : "bg-amber-100 text-amber-700" // Programado / default
+                              : "bg-amber-100 text-amber-700"
                           }`}
                         >
                           {t.estado}
