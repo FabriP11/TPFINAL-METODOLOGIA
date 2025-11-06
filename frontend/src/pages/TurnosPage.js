@@ -3,11 +3,15 @@ import { useEffect, useState } from "react";
 import { crearTurno, actualizarTurno } from "../api/turnos";
 import { getPacientes } from "../api/pacientes";
 import { getMedicos } from "../api/medicos";
+import { getEspecialidades } from "../api/especialidades"; // 👈 NUEVO
 import Layout from "../components/Layout";
 
 function TurnosPage() {
   const [pacientes, setPacientes] = useState([]);
   const [medicos, setMedicos] = useState([]);
+  const [especialidades, setEspecialidades] = useState([]); // 👈 NUEVO
+  const [especialidadSeleccionada, setEspecialidadSeleccionada] = useState(""); // 👈 NUEVO
+
   const [form, setForm] = useState({
     id_turno: null,
     id_paciente: "",
@@ -18,9 +22,15 @@ function TurnosPage() {
   const [modoEdicion, setModoEdicion] = useState(false);
 
   async function cargarDatos() {
-    const [ps, ms] = await Promise.all([getPacientes(), getMedicos()]);
+    // ahora traemos pacientes, médicos y especialidades juntos
+    const [ps, ms, esps] = await Promise.all([
+      getPacientes(),
+      getMedicos(),
+      getEspecialidades(), // 👈 NUEVO
+    ]);
     setPacientes(ps);
     setMedicos(ms);
+    setEspecialidades(esps);
   }
 
   useEffect(() => {
@@ -34,6 +44,7 @@ function TurnosPage() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    // 👉 payload correcto (id_paciente siempre número)
     const payload = {
       id_paciente: Number(form.id_paciente),
       id_medico: form.id_medico ? Number(form.id_medico) : null,
@@ -55,12 +66,21 @@ function TurnosPage() {
       estado: "Programado",
     });
     setModoEdicion(false);
+    setEspecialidadSeleccionada("");
   }
+
+  // 🔎 Médicos filtrados por especialidad
+  const medicosFiltrados =
+    especialidadSeleccionada === ""
+      ? medicos
+      : medicos.filter(
+          (m) => m.id_especialidad === Number(especialidadSeleccionada)
+        );
 
   return (
     <Layout current="turnos">
       {/* Encabezado */}
-      <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-slate-800 md:text-3xl">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
@@ -84,6 +104,7 @@ function TurnosPage() {
               fecha_turno: "",
               estado: "Programado",
             });
+            setEspecialidadSeleccionada("");
           }}
           className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
         >
@@ -96,14 +117,12 @@ function TurnosPage() {
         {/* Header de la card */}
         <div className="flex items-center gap-2 bg-blue-600 px-5 py-3 text-white">
           <span>✏️</span>
-          <h2 className="font-semibold">
-            Datos del Turno
-          </h2>
+          <h2 className="font-semibold">Datos del Turno</h2>
         </div>
 
-        {/* Contenido del formulario */}
+        {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-6 px-5 py-4">
-          {/* Dos columnas: Paciente / Médico */}
+          {/* Paciente / Médico */}
           <div className="grid gap-4 md:grid-cols-2">
             {/* Paciente */}
             <div className="rounded-lg border bg-slate-50 p-4 shadow-sm">
@@ -132,7 +151,7 @@ function TurnosPage() {
               </select>
             </div>
 
-            {/* Médico */}
+            {/* Especialidad + Médico */}
             <div className="rounded-lg border bg-slate-50 p-4 shadow-sm">
               <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -140,22 +159,61 @@ function TurnosPage() {
                 </span>
                 Médico <span className="text-red-500">*</span>
               </h3>
-              <label className="mb-1 block text-xs font-medium text-slate-500">
-                Seleccione un médico
-              </label>
-              <select
-                name="id_medico"
-                value={form.id_medico}
-                onChange={handleChange}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">-- Seleccionar médico --</option>
-                {medicos.map((m) => (
-                  <option key={m.id_medico} value={m.id_medico}>
-                    {m.nombre} {m.apellido}
+
+              {/* Especialidad */}
+              <div className="mb-3">
+                <label className="mb-1 block text-xs font-medium text-slate-500">
+                  Especialidad
+                </label>
+                <select
+                  value={especialidadSeleccionada}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEspecialidadSeleccionada(value);
+                    // cuando cambio la especialidad, limpio el médico seleccionado
+                    setForm((prev) => ({ ...prev, id_medico: "" }));
+                  }}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">-- Seleccionar especialidad --</option>
+                  {especialidades.map((esp) => (
+                    <option
+                      key={esp.id_especialidad}
+                      value={esp.id_especialidad}
+                    >
+                      {esp.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Médico, filtrado por especialidad */}
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500">
+                  Seleccione un médico
+                </label>
+                <select
+                  name="id_medico"
+                  value={form.id_medico}
+                  onChange={handleChange}
+                  required
+                  disabled={medicosFiltrados.length === 0}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100"
+                >
+                  <option value="">
+                    {especialidadSeleccionada === ""
+                      ? "-- Primero elija una especialidad --"
+                      : medicosFiltrados.length === 0
+                      ? "No hay médicos para esa especialidad"
+                      : "-- Seleccionar médico --"}
                   </option>
-                ))}
-              </select>
+                  {medicosFiltrados.map((m) => (
+                    <option key={m.id_medico} value={m.id_medico}>
+                      {m.nombre} {m.apellido}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -172,8 +230,7 @@ function TurnosPage() {
                 value={form.fecha_turno.split("T")[0] || ""}
                 onChange={(e) => {
                   const fecha = e.target.value;
-                  const hora =
-                    form.fecha_turno.split("T")[1] || "09:00";
+                  const hora = form.fecha_turno.split("T")[1] || "09:00";
                   setForm({
                     ...form,
                     fecha_turno: `${fecha}T${hora}`,
@@ -254,9 +311,7 @@ function TurnosPage() {
           <li>Los campos marcados con * son obligatorios.</li>
           <li>El paciente y el médico deben estar cargados en el sistema.</li>
           <li>Revisá el horario del médico antes de asignar el turno.</li>
-          <li>
-            Los turnos se programan en horarios definidos por la clínica.
-          </li>
+          <li>Los turnos se programan en horarios definidos por la clínica.</li>
         </ul>
       </div>
     </Layout>
@@ -264,4 +319,3 @@ function TurnosPage() {
 }
 
 export default TurnosPage;
-
