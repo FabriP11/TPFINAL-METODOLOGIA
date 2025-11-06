@@ -1,9 +1,11 @@
+// src/pages/HomePage.jsx
 import React, { useEffect, useState } from "react";
+import Layout from "../components/Layout";
 import { getTurnos } from "../api/turnos";
 import { getPacientes } from "../api/pacientes";
 import { getMedicos } from "../api/medicos";
-import Layout from "../components/Layout"; // ⬅️ IMPORTANTE
 
+// Helpers de formato
 function formatearFecha(fechaStr) {
   if (!fechaStr) return "-";
   const d = new Date(fechaStr);
@@ -28,9 +30,13 @@ function HomePage() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
 
+  // filtros
   const [fechaFiltro, setFechaFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
   const [busquedaPaciente, setBusquedaPaciente] = useState("");
+
+  // turno seleccionado para el comprobante
+  const [turnoSeleccionado, setTurnoSeleccionado] = useState(null);
 
   useEffect(() => {
     cargarDatos();
@@ -56,7 +62,6 @@ function HomePage() {
     }
   }
 
-
   const turnosEnriquecidos = turnos.map((t) => {
     const paciente = pacientes.find((p) => p.id_paciente === t.id_paciente);
     const medico = medicos.find((m) => m.id_medico === t.id_medico);
@@ -66,18 +71,17 @@ function HomePage() {
       nombrePaciente: paciente
         ? `${paciente.nombre} ${paciente.apellido}`
         : "Sin asignar",
+      dniPaciente: paciente?.dni ?? "",
       nombreMedico: medico
         ? `${medico.nombre} ${medico.apellido}`
         : "Sin asignar",
-      dniPaciente: paciente?.dni ?? "",
+      especialidad: medico?.especialidad ?? "",
     };
   });
 
-  // Aplicar filtros
   const turnosFiltrados = turnosEnriquecidos.filter((t) => {
     let ok = true;
 
-    // filtro por fecha 
     if (fechaFiltro) {
       const fechaTurno = new Date(t.fecha_turno);
       const fechaInput = new Date(fechaFiltro);
@@ -88,12 +92,10 @@ function HomePage() {
       if (!mismoDia) ok = false;
     }
 
-    // filtro estado
     if (estadoFiltro !== "Todos" && t.estado !== estadoFiltro) {
       ok = false;
     }
 
-    // filtro búsqueda paciente (nombre / dni)
     if (busquedaPaciente.trim() !== "") {
       const term = busquedaPaciente.toLowerCase();
       const texto = `${t.nombrePaciente} ${t.dniPaciente}`.toLowerCase();
@@ -103,9 +105,20 @@ function HomePage() {
     return ok;
   });
 
+  function abrirDetalle(turno) {
+    setTurnoSeleccionado(turno);
+  }
+
+  function cerrarDetalle() {
+    setTurnoSeleccionado(null);
+  }
+
+  function imprimirDetalle() {
+    window.print();
+  }
+
   return (
-    <Layout>
-      {}
+    <Layout current="dashboard">
       <div className="min-h-screen bg-slate-100 px-4 py-6 md:px-8">
         {/* Encabezado */}
         <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -179,7 +192,6 @@ function HomePage() {
                 onChange={(e) => setBusquedaPaciente(e.target.value)}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              {/* Botón de limpiar búsqueda */}
               <button
                 type="button"
                 onClick={() => setBusquedaPaciente("")}
@@ -191,9 +203,8 @@ function HomePage() {
           </div>
         </div>
 
-        {}
+        {/* Card de Turnos Registrados */}
         <div className="overflow-hidden rounded-lg bg-white shadow">
-          {}
           <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-500 text-sm text-white">
@@ -293,7 +304,10 @@ function HomePage() {
                         </span>
                       </td>
                       <td className="px-4 py-2 text-right text-xs">
-                        <button className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">
+                        <button
+                          onClick={() => abrirDetalle(t)}
+                          className="rounded-md border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
+                        >
                           Ver
                         </button>
                       </td>
@@ -304,6 +318,117 @@ function HomePage() {
             </table>
           </div>
         </div>
+
+        {/* Modal de comprobante */}
+        {turnoSeleccionado && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+            <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b px-5 py-3">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-700">
+                    Comprobante de Turno
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    #{turnoSeleccionado.id_turno}
+                  </p>
+                </div>
+                <button
+                  onClick={cerrarDetalle}
+                  className="rounded-md px-2 text-sm text-slate-500 hover:bg-slate-100"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-3 px-5 py-4 text-sm text-slate-700">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Paciente
+                  </p>
+                  <p className="font-medium">
+                    {turnoSeleccionado.nombrePaciente}
+                  </p>
+                  {turnoSeleccionado.dniPaciente && (
+                    <p className="text-xs text-slate-500">
+                      DNI: {turnoSeleccionado.dniPaciente}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Médico
+                  </p>
+                  <p className="font-medium">
+                    {turnoSeleccionado.nombreMedico}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500">
+                      Fecha
+                    </p>
+                    <p>{formatearFecha(turnoSeleccionado.fecha_turno)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500">
+                      Hora
+                    </p>
+                    <p>{formatearHora(turnoSeleccionado.fecha_turno)}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Estado
+                  </p>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      turnoSeleccionado.estado === "Atendiendo"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : turnoSeleccionado.estado === "Finalizado"
+                        ? "bg-slate-200 text-slate-700"
+                        : turnoSeleccionado.estado === "Cancelado"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {turnoSeleccionado.estado}
+                  </span>
+                </div>
+
+                <div className="mt-2 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  Este comprobante es solo de uso interno del sistema de la
+                  clínica.
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="flex items-center justify-between border-t px-5 py-3">
+                <button
+                  onClick={cerrarDetalle}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Cerrar
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Generar
+                  </button>
+                  <button
+                    onClick={imprimirDetalle}
+                    className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                  >
+                    Imprimir
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
