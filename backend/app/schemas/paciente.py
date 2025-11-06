@@ -1,14 +1,17 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class PacienteIn(BaseModel):
+class PacienteBase(BaseModel):
     nombre: str
     apellido: str
     dni: Optional[str] = None
     correo: Optional[str] = None
 
-class PacienteOut(PacienteIn):
+class PacienteIn(PacienteBase):
+    pass
+
+class PacienteOut(PacienteBase):
     id_paciente: int
-    
+
     class Config:
         from_attributes = True

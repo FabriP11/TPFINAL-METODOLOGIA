@@ -9,5 +9,6 @@ class Paciente(Base):
     nombre = Column(String(100))
     apellido = Column(String(100))
     dni = Column(String(20))
+    correo = Column(String(100))
     
     turnos = relationship("Turno", back_populates="paciente")

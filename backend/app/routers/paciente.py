@@ -35,7 +35,8 @@ async def obtener_paciente(id_paciente: int, db: AsyncSession = Depends(get_db))
 # ✅ CREAR PACIENTE
 @router.post("/", response_model=PacienteOut)
 async def crear_paciente(datos: PacienteIn, db: AsyncSession = Depends(get_db)):
-    nuevo_paciente = Paciente(**datos.dict())
+    data = datos.model_dump()
+    nuevo_paciente = Paciente(**data)
     db.add(nuevo_paciente)
     await db.commit()
     await db.refresh(nuevo_paciente)
